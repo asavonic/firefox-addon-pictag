@@ -25,3 +25,15 @@ var button = buttons.ActionButton({
 function handleClick(state) {
   tabs.open("https://www.mozilla.org/");
 }
+
+var contextMenu = require("sdk/context-menu");
+ var menuItem = contextMenu.Item({
+  label: "Save image with tags",
+  context: contextMenu.SelectorContext("img"),
+  contentScript: 'self.on("click", function (node, data) {' +
+                 '  self.postMessage(node.src);' +
+                 '});',
+  onMessage: function (selectedImage) {
+    console.log(selectedImage);
+  }
+});
