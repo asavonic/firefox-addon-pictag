@@ -6,7 +6,14 @@
     orient="horizontal"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <!-- Other elements go here -->
-<button id="button-save" class="dialog" label="Save" />
-<checkbox id="tag-1" label="Tag 1"/>
-<checkbox id="tag-2" label="Tag 2"/>
+    <button
+	id="identifier"
+	class="dialog"
+	label="Save" />
+    <groupbox>
+      <checkbox id="tag-1" label="Tag 1" persist="checked"/>
+      <checkbox id="tag-2" label="Tag 2" persist="checked"/>
+      <checkbox id="tag-3" label="Tag 3" persist="checked"/>
+      <checkbox id="tag-4" label="Tag 4" persist="checked"/>
+    </groupbox>
 </window>

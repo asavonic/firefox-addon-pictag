@@ -36,7 +36,7 @@ var menuItem = contextMenu.Item({
     onMessage: function (selectedImage) {
 	console.log(selectedImage);
 	var window = require('sdk/window/utils');
-	window.open("chrome://pictag/content/saveWithTag.xul",
+	window.open("chrome://pictag/content/saveImage.xul",
 		    "pictag-save-image",
 		    "chrome,centerscreen");
     }
