@@ -1,0 +1,13 @@
+{
+  "title": "PicTag",
+  "name": "pictag",
+  "version": "0.0.1",
+  "description": "Add-on to save pictures with multiple tags",
+  "main": "index.js",
+  "author": "Andrew Savonichev <andrew.savonichev@gmail.com>",
+  "engines": {
+    "firefox": ">=38.0a1",
+    "fennec": ">=38.0a1"
+  },
+  "license": "MIT"
+}
