@@ -27,13 +27,17 @@ function handleClick(state) {
 }
 
 var contextMenu = require("sdk/context-menu");
- var menuItem = contextMenu.Item({
-  label: "Save image with tags",
-  context: contextMenu.SelectorContext("img"),
-  contentScript: 'self.on("click", function (node, data) {' +
-                 '  self.postMessage(node.src);' +
-                 '});',
-  onMessage: function (selectedImage) {
-    console.log(selectedImage);
-  }
+var menuItem = contextMenu.Item({
+    label: "Save image with tags",
+    context: contextMenu.SelectorContext("img"),
+    contentScript: 'self.on("click", function (node, data) {' +
+        '  self.postMessage(node.src);' +
+        '});',
+    onMessage: function (selectedImage) {
+	console.log(selectedImage);
+	var window = require('sdk/window/utils');
+	window.open("chrome://pictag/content/saveWithTag.xul",
+		    "pictag-save-image",
+		    "chrome,centerscreen");
+    }
 });
