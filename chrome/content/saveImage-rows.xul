@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window
+    id="pictag-save-image"
+    title="PicTag save image"
+    orient="horizontal"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!-- Other elements go here -->
+<vbox>
+  <hbox align="center">
+    <spacer flex="1"/>
+    <button id="btn-save" class="dialog" label="Save"/>
+    <button id="btn-add-tag" class="dialog" label="Add tag"/>
+    <spacer flex="1"/>
+  </hbox>
+  <grid>
+    <columns>
+      <column flex="2" />
+      <column flex="1" />
+    </columns>
+    <rows>
+      <row>
+	<checkbox id="tag-1" label="Tag 1" persist="checked"/>
+	<checkbox id="tag-2" label="Tag 2" persist="checked"/>
+	<checkbox id="tag-3" label="Tag 3" persist="checked"/>
+	<checkbox id="tag-4" label="Tag 4" persist="checked"/>
+	<checkbox id="tag-5" label="Tag 5" persist="checked"/>
+      </row>
+      <row>
+	<checkbox id="tag-6" label="Tag 6" persist="checked"/>
+	<checkbox id="tag-7" label="Tag 7" persist="checked"/>
+	<checkbox id="tag-8" label="Tag 8" persist="checked"/>
+	<checkbox id="tag-9" label="Tag 9" persist="checked"/>
+	<checkbox id="tag-10" label="Tag 10" persist="checked"/>
+      </row>
+      <row>
+	<checkbox id="tag-11" label="Tag 11" persist="checked"/>
+	<checkbox id="tag-12" label="Tag 12" persist="checked"/>
+	<checkbox id="tag-13" label="Tag 13" persist="checked"/>
+	<checkbox id="tag-14" label="Tag 14" persist="checked"/>
+	<checkbox id="tag-15" label="Tag 15" persist="checked"/>
+      </row>
+    </rows>
+  </grid>
+</vbox>
+</window>
