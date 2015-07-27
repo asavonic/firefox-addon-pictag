@@ -1,3 +1,4 @@
+
 var self = require('sdk/self');
 
 // a dummy function, to show how tests work.
@@ -39,5 +40,50 @@ var menuItem = contextMenu.Item({
 	window.open("chrome://pictag/content/saveImage.xul",
 		    "pictag-save-image",
 		    "chrome,centerscreen");
+	var storage = getStorageDir();
+	console.log("storage dir is " + storage.path);
     }
 });
+
+function getLocalDir() {
+    let directoryService =
+	Cc["@mozilla.org/file/directory_service;1"].
+	getService(Ci.nsIProperties);
+    // this is a reference to the profile dir (ProfD) now.
+    let localDir = directoryService.get("ProfD", Ci.nsIFile);
+
+    localDir.append("XULSchool");
+
+    if (!localDir.exists() || !localDir.isDirectory()) {
+	// read and write permissions to owner and group, read-only for others.
+	localDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0774);
+    }
+
+    return localDir;
+}
+
+let { Cc, Ci, Cu } = require('chrome');
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+function getDefaultStorageDir() {
+    var default_storage = FileUtils.getDir("Home", ["PicTag"], true);
+    return default_storage;
+}
+
+function getStorageDir() {
+    Cu.import("resource://gre/modules/Services.jsm");
+    var prefs = Services.prefs.getBranch("extensions.pictag.");
+
+    try {
+	var storage = prefs.getComplexValue("storagedir", Ci.nsILocalFile);
+    } catch (e) {
+	return getDefaultStorageDir();
+    }
+
+    if (!storage) {
+	return getDefaultStorageDir();
+    }
+
+    return storage;
+}
