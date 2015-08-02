@@ -7,8 +7,9 @@ var contextMenu = require("sdk/context-menu");
 let { Cc, Ci, Cu } = require('chrome');
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-var IOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
+Cu.import("resource://gre/modules/osfile.jsm"); // OS.File things
+Cu.import("resource://gre/modules/Downloads.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 // Context menu integration
 var menuItem = contextMenu.Item({
     label: "Save image with tags",
@@ -32,43 +33,75 @@ function openSaveImageDialog(imageUri) {
 
 function saveImageWithTags(imageUri, tags) {
     var storage = getStorageDir();
-    console.log("storage dir is " + storage.path);
-    var firstTag = tags.shift();
     var filename = imageUri.substring(imageUri.lastIndexOf('/')+1);
-    var firstTagFile = storage.clone();
-    firstTagFile.append(firstTag);
-    firstTagFile.create(1, 0700);
-    firstTagFile.append(filename);
 
-    downloadFile(imageUri, firstTagFile, function () {
-	for (i = 0; i < tags.length; i++) {
-	    var nextTagDir = storage.clone();
-	    nextTagDir.append(tags[i]);
-	    if (!nextTagDir.exists()) {
-		nextTagDir.create(1, 0700);
-	    }
-	    firstTagFile.copyTo(nextTagDir, filename);
+    var firstTagFile = null;
+    // find out the first tag to save and skip already processed tags
+    while (firstTagFile == null && tags.length > 0) {
+	var firstTag = tags.shift();
+	var file = tagFilePath(firstTag, filename);
+	if (!pathExists(file)) {
+	    firstTagFile = file;
 	}
-    })
+    }
+
+    // file have been saved to all tags or no tags were selected at all
+    if (firstTagFile == null) {
+	return;
+    }
+
+    downloadFile(imageUri, firstTagFile, function() {
+	// copy image to other tags
+	copyImageToTags(firstTagFile, tags);
+    });
 }
 
+function copyImageToTags(imageFile, tags) {
+    filename = OS.Path.basename(imageFile);
+    for (i = 0; i < tags.length; i++) {
+	dest = tagFilePath(tags[i], filename);
+	if (!pathExists(dest)) {
+	    OS.File.copy(imageFile, dest);
+	}
+    }
+}
+
+function tagFilePath(tag, filename) {
+    var storage = getStorageDir();
+    var dir = OS.Path.join(storage, tag);
+
+    var path;
+    // no error if directory is already exists
+    let promise = OS.File.makeDir(dir);
+    promise = promise.then(
+	function onSuccess() {
+	    path = OS.Path.join(dir, filename);
+	}
+    );
+
+    return path;
+}
+
+function pathExists(path) {
+    var exists;
+    let promise = OS.File.exists(path);
+    promise = promise.then(
+	function onSuccess(result) {
+	    exists = result;
+	}
+    )
+
+    return exists;
+}
 
 function downloadFile(remote, local, callback) {
-    var downloadObserver = {onDownloadComplete: function(nsIDownloader, nsresult, file) {
-	callback();
-    }};
-
-    var downloader = Cc["@mozilla.org/network/downloader;1"].createInstance();
-    downloader.QueryInterface(Ci.nsIDownloader);
-    downloader.init(downloadObserver, local);
-
-    var httpChan = IOService.newChannel(remote, "", null);
-    // httpChan.QueryInterface(Ci.nsIHttpChannel);
-    httpChan.asyncOpen(downloader, local);
+    Task.spawn(function () {
+	yield Downloads.fetch(remote, local);
+    }).then(callback, Cu.reportError);
 }
 
 function getDefaultStorageDir() {
-    var default_storage = FileUtils.getDir("Home", ["PicTag"], true);
+    var default_storage = OS.Path.join(OS.Constants.Path.homeDir, "PicTag");
     return default_storage;
 }
 
