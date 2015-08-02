@@ -1,60 +1,34 @@
-
 var self = require('sdk/self');
-
-// a dummy function, to show how tests work.
-// to see how to test this function, look at test/test-index.js
-function dummy(text, callback) {
-  callback(text);
-}
-
-exports.dummy = dummy;
-
 var window = require('sdk/window/utils');
 var buttons = require('sdk/ui/button/action');
 var tabs = require("sdk/tabs");
-
-var button = buttons.ActionButton({
-  id: "mozilla-link",
-  label: "Visit Mozilla",
-  icon: {
-    "16": "./icon-16.png",
-    "32": "./icon-32.png",
-    "64": "./icon-64.png"
-  },
-  onClick: handleClick
-});
-
-function handleClick(state) {
-  tabs.open("https://www.mozilla.org/");
-}
-
-window.saveImageWithTags = function(tags) {
-    if (!(imageUri in window)) {
-	window.alert("No image selected!");
-    }
-
-    console.log("Saving " + imageUri + " with tags:" + tags.toString());
-}
-
 var contextMenu = require("sdk/context-menu");
+
+let { Cc, Ci, Cu } = require('chrome');
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+var IOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+// Context menu integration
 var menuItem = contextMenu.Item({
     label: "Save image with tags",
     context: contextMenu.SelectorContext("img"),
     contentScript: 'self.on("click", function (node, data) {' +
         '  self.postMessage(node.src);' +
         '});',
-    onMessage: function (selectedImage) {
-	console.log(selectedImage);
-	dlg = window.open("chrome://pictag/content/saveImage.xul",
-			  "pictag-save-image",
-			  "chrome,centerscreen");
-
-	dlg.saveImageWithTags = function(tags) {
-	    console.log("Saving " + selectedImage + " with tags:" + tags.toString());
-	    saveImageWithTags(selectedImage, tags)
-	}
-    }
+    onMessage: openSaveImageDialog
 });
+
+function openSaveImageDialog(imageUri) {
+    console.log(imageUri);
+    dlg = window.open("chrome://pictag/content/saveImage.xul",
+		      "pictag-save-image",
+		      "chrome,centerscreen");
+
+    dlg.saveImageWithTags = function(tags) {
+	saveImageWithTags(imageUri, tags)
+    }
+}
 
 function saveImageWithTags(imageUri, tags) {
     var storage = getStorageDir();
@@ -78,27 +52,20 @@ function saveImageWithTags(imageUri, tags) {
     })
 }
 
-function getLocalDir() {
-    let directoryService =
-	Cc["@mozilla.org/file/directory_service;1"].
-	getService(Ci.nsIProperties);
-    // this is a reference to the profile dir (ProfD) now.
-    let localDir = directoryService.get("ProfD", Ci.nsIFile);
 
-    localDir.append("XULSchool");
+function downloadFile(remote, local, callback) {
+    var downloadObserver = {onDownloadComplete: function(nsIDownloader, nsresult, file) {
+	callback();
+    }};
 
-    if (!localDir.exists() || !localDir.isDirectory()) {
-	// read and write permissions to owner and group, read-only for others.
-	localDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0774);
-    }
+    var downloader = Cc["@mozilla.org/network/downloader;1"].createInstance();
+    downloader.QueryInterface(Ci.nsIDownloader);
+    downloader.init(downloadObserver, local);
 
-    return localDir;
+    var httpChan = IOService.newChannel(remote, "", null);
+    // httpChan.QueryInterface(Ci.nsIHttpChannel);
+    httpChan.asyncOpen(downloader, local);
 }
-
-let { Cc, Ci, Cu } = require('chrome');
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-var IOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 function getDefaultStorageDir() {
     var default_storage = FileUtils.getDir("Home", ["PicTag"], true);
@@ -121,18 +88,3 @@ function getStorageDir() {
 
     return storage;
 }
-
-function downloadFile(remote, local, callback) {
-    var downloadObserver = {onDownloadComplete: function(nsIDownloader, nsresult, file) {
-	callback();
-    }};
-
-    var downloader = Cc["@mozilla.org/network/downloader;1"].createInstance();
-    downloader.QueryInterface(Ci.nsIDownloader);
-    downloader.init(downloadObserver, local);
-
-    var httpChan = IOService.newChannel(remote, "", null);
-    // httpChan.QueryInterface(Ci.nsIHttpChannel);
-    httpChan.asyncOpen(downloader, local);
-}
-
