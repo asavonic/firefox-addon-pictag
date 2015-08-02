@@ -10,6 +10,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm"); // OS.File things
 Cu.import("resource://gre/modules/Downloads.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+
+var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
+                              .getService(Ci.nsIPromptService);
 // Context menu integration
 var menuItem = contextMenu.Item({
     label: "Save image with tags",
@@ -31,73 +34,57 @@ function openSaveImageDialog(imageUri) {
     }
 }
 
+hashCode = function(s){
+  return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+}
+
+function filenameFromURI(uri) {
+    var filename = imageUri.substring(imageUri.lastIndexOf('/')+1);
+    var dot = filename.firstIndexOf('.');
+    filename = filename.substring(0, dot) + "-" + hashCode(uri) + filename.substring(dot);
+    return filename;
+}
+
 function saveImageWithTags(imageUri, tags) {
     var storage = getStorageDir();
     var filename = imageUri.substring(imageUri.lastIndexOf('/')+1);
 
-    var firstTagFile = null;
     // find out the first tag to save and skip already processed tags
-    while (firstTagFile == null && tags.length > 0) {
-	var firstTag = tags.shift();
-	var file = tagFilePath(firstTag, filename);
-	if (!pathExists(file)) {
-	    firstTagFile = file;
+    var firstTag = tags.shift();
+    Task.spawn(function () {
+	var firstTagFile = yield tagFilePath(firstTag, filename);
+	var exists = yield OS.File.exists(firstTagFile);
+	if (!exists) {
+	    yield Downloads.fetch(imageUri, firstTagFile);
 	}
-    }
-
-    // file have been saved to all tags or no tags were selected at all
-    if (firstTagFile == null) {
-	return;
-    }
-
-    downloadFile(imageUri, firstTagFile, function() {
-	// copy image to other tags
 	copyImageToTags(firstTagFile, tags);
+    }
+    ).then(null, function (e) {
+	Cu.reportError(e);
+	promptService.alert(null, "PicTag error", "Unable to save file, check the console");
     });
 }
 
 function copyImageToTags(imageFile, tags) {
     filename = OS.Path.basename(imageFile);
-    for (i = 0; i < tags.length; i++) {
-	dest = tagFilePath(tags[i], filename);
-	if (!pathExists(dest)) {
-	    OS.File.copy(imageFile, dest);
+    return Task.spawn(function () {
+	for (i = 0; i < tags.length; i++) {
+	    var dest = yield tagFilePath(tags[i], filename);
+	    var exists = yield OS.File.exists(dest);
+	    if (!exists) {
+		yield OS.File.copy(imageFile, dest);
+	    }
 	}
-    }
+    });
 }
 
 function tagFilePath(tag, filename) {
     var storage = getStorageDir();
     var dir = OS.Path.join(storage, tag);
-
-    var path;
-    // no error if directory is already exists
     let promise = OS.File.makeDir(dir);
-    promise = promise.then(
-	function onSuccess() {
-	    path = OS.Path.join(dir, filename);
-	}
-    );
-
-    return path;
-}
-
-function pathExists(path) {
-    var exists;
-    let promise = OS.File.exists(path);
-    promise = promise.then(
-	function onSuccess(result) {
-	    exists = result;
-	}
-    )
-
-    return exists;
-}
-
-function downloadFile(remote, local, callback) {
-    Task.spawn(function () {
-	yield Downloads.fetch(remote, local);
-    }).then(callback, Cu.reportError);
+    return promise.then(function () {
+	return OS.Path.join(dir, filename);
+    }, Cu.reportError);
 }
 
 function getDefaultStorageDir() {
