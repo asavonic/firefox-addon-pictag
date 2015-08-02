@@ -9,6 +9,7 @@ function dummy(text, callback) {
 
 exports.dummy = dummy;
 
+var window = require('sdk/window/utils');
 var buttons = require('sdk/ui/button/action');
 var tabs = require("sdk/tabs");
 
@@ -27,6 +28,14 @@ function handleClick(state) {
   tabs.open("https://www.mozilla.org/");
 }
 
+window.saveImageWithTags = function(tags) {
+    if (!(imageUri in window)) {
+	window.alert("No image selected!");
+    }
+
+    console.log("Saving " + imageUri + " with tags:" + tags.toString());
+}
+
 var contextMenu = require("sdk/context-menu");
 var menuItem = contextMenu.Item({
     label: "Save image with tags",
@@ -36,14 +45,38 @@ var menuItem = contextMenu.Item({
         '});',
     onMessage: function (selectedImage) {
 	console.log(selectedImage);
-	var window = require('sdk/window/utils');
-	window.open("chrome://pictag/content/saveImage.xul",
-		    "pictag-save-image",
-		    "chrome,centerscreen");
-	var storage = getStorageDir();
-	console.log("storage dir is " + storage.path);
+	dlg = window.open("chrome://pictag/content/saveImage.xul",
+			  "pictag-save-image",
+			  "chrome,centerscreen");
+
+	dlg.saveImageWithTags = function(tags) {
+	    console.log("Saving " + selectedImage + " with tags:" + tags.toString());
+	    saveImageWithTags(selectedImage, tags)
+	}
     }
 });
+
+function saveImageWithTags(imageUri, tags) {
+    var storage = getStorageDir();
+    console.log("storage dir is " + storage.path);
+    var firstTag = tags.shift();
+    var filename = imageUri.substring(imageUri.lastIndexOf('/')+1);
+    var firstTagFile = storage.clone();
+    firstTagFile.append(firstTag);
+    firstTagFile.create(1, 0700);
+    firstTagFile.append(filename);
+
+    downloadFile(imageUri, firstTagFile, function () {
+	for (i = 0; i < tags.length; i++) {
+	    var nextTagDir = storage.clone();
+	    nextTagDir.append(tags[i]);
+	    if (!nextTagDir.exists()) {
+		nextTagDir.create(1, 0700);
+	    }
+	    firstTagFile.copyTo(nextTagDir, filename);
+	}
+    })
+}
 
 function getLocalDir() {
     let directoryService =
@@ -65,6 +98,7 @@ function getLocalDir() {
 let { Cc, Ci, Cu } = require('chrome');
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+var IOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 function getDefaultStorageDir() {
     var default_storage = FileUtils.getDir("Home", ["PicTag"], true);
@@ -87,3 +121,18 @@ function getStorageDir() {
 
     return storage;
 }
+
+function downloadFile(remote, local, callback) {
+    var downloadObserver = {onDownloadComplete: function(nsIDownloader, nsresult, file) {
+	callback();
+    }};
+
+    var downloader = Cc["@mozilla.org/network/downloader;1"].createInstance();
+    downloader.QueryInterface(Ci.nsIDownloader);
+    downloader.init(downloadObserver, local);
+
+    var httpChan = IOService.newChannel(remote, "", null);
+    // httpChan.QueryInterface(Ci.nsIHttpChannel);
+    httpChan.asyncOpen(downloader, local);
+}
+

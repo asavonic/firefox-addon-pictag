@@ -6,10 +6,11 @@
     orient="horizontal"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <!-- Other elements go here -->
+<script type="text/javascript" src="chrome://pictag/content/saveImage.js"/>
 <vbox>
   <hbox align="center">
     <spacer flex="1"/>
-    <button id="btn-save" class="dialog" label="Save"/>
+    <button id="btn-save" class="dialog" label="Save" oncommand="returnTags(); window.close();"/>
     <button id="btn-add-tag" class="dialog" label="Add tag"/>
     <spacer flex="1"/>
   </hbox>
@@ -18,7 +19,7 @@
       <column flex="2" />
       <column flex="1" />
     </columns>
-    <rows>
+    <rows id="grid-rows">
       <row>
 	<checkbox id="tag-1" label="Tag 1" persist="checked"/>
 	<checkbox id="tag-2" label="Tag 2" persist="checked"/>
