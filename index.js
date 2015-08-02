@@ -39,15 +39,16 @@ hashCode = function(s){
 }
 
 function filenameFromURI(uri) {
-    var filename = imageUri.substring(imageUri.lastIndexOf('/')+1);
-    var dot = filename.firstIndexOf('.');
-    filename = filename.substring(0, dot) + "-" + hashCode(uri) + filename.substring(dot);
+    var filename = uri.substring(uri.lastIndexOf('/')+1);
+    var dot = filename.indexOf('.');
+    filename = filename.substring(0, dot) + "-" + Math.abs(hashCode(uri))
+	+ filename.substring(dot);
     return filename;
 }
 
 function saveImageWithTags(imageUri, tags) {
     var storage = getStorageDir();
-    var filename = imageUri.substring(imageUri.lastIndexOf('/')+1);
+    var filename = filenameFromURI(imageUri);
 
     // find out the first tag to save and skip already processed tags
     var firstTag = tags.shift();
