@@ -95,7 +95,11 @@ function getTagList() {
     var prefs = Services.prefs.getBranch("extensions.@pictag.");
     try {
 	var taglist_str = prefs.getComplexValue("taglist", Ci.nsISupportsString).data;
-	return taglist_str.split(":");
+	if (taglist_str == "") {
+	    return []
+	} else {
+	    return taglist_str.split(":");
+	}
     } catch (e) {
 	return [];
     }

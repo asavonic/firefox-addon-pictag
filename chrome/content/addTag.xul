@@ -4,7 +4,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept,cancel"
   buttonlabelcancel="Cancel"
-  buttonlabelaccept="Save"
+  buttonlabelaccept="Add"
   ondialogaccept="doOK();">
 
   <dialogheader title="Add tag"/>
@@ -19,11 +19,10 @@
     if (label != "") {
         addTag(label);
     }
-    return false;
+    return true;
     }
 
     function doCancel(){
-    alert("You pressed Cancel!");
     return true;
     }
   </script>
