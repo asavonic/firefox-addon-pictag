@@ -5,7 +5,7 @@
           <em:type>2</em:type>
           <em:bootstrap>true</em:bootstrap>
           <em:unpack>false</em:unpack>
-          <em:version>0.0.1</em:version>
+          <em:version>0.1.1</em:version>
           <em:name>PicTag</em:name>
           <em:description>Add-on to save pictures with multiple tags</em:description>
           <em:creator>Andrew Savonichev &lt;andrew.savonichev@gmail.com&gt;</em:creator>
