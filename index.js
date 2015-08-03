@@ -109,7 +109,7 @@ function addTagToPrefs(tag) {
     var str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     var prefs = Services.prefs.getBranch("extensions.@pictag.");
     var taglist = getTagList();
-    taglist.append(tag);
+    taglist.push(tag);
     str.data = taglist.join(":");
     prefs.setComplexValue("taglist", Ci.nsISupportsString, str);
 }
