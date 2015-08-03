@@ -121,16 +121,23 @@ function getDefaultStorageDir() {
 
 function getStorageDir() {
     var prefs = Services.prefs.getBranch("extensions.@pictag.");
-
+    var storage;
     try {
-	var storage = prefs.getComplexValue("storagedir", Ci.nsILocalFile);
+	storage = prefs.getComplexValue("storagedir", Ci.nsILocalFile);
     } catch (e) {
-	return getDefaultStorageDir();
+	storage = null;
     }
 
     if (!storage) {
-	return getDefaultStorageDir();
+	storage = getDefaultStorageDir();
     }
+
+    Task.spawn(function () {
+	yield OS.File.makeDir(storage);
+    }).then(null, function (e) {
+	Cu.reportError(e);
+	promptService.alert(null, "PicTag error", "Unable to create PicTag directory in $HOME");
+    });
 
     return storage;
 }
