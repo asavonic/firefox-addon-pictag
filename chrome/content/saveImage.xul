@@ -5,6 +5,7 @@
     title="PicTag save image"
     orient="horizontal"
     onload="onLoad();"
+    persist="width,height,left,top"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <!-- Other elements go here -->
 <script type="text/javascript" src="chrome://pictag/content/saveImage.js"/>

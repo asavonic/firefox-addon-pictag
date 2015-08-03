@@ -18,6 +18,10 @@ function returnTags() {
 
 function onLoad () {
     loadTags();
+    window.sizeToContent();
+    var xPos = (screen.width/2) - (outerWidth/2);
+    var yPos = (screen.height/2) - (outerHeight/2);
+    window.moveTo(xPos, yPos);
 }
 
 function createTagElem(num, label) {
