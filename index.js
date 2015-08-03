@@ -10,9 +10,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm"); // OS.File things
 Cu.import("resource://gre/modules/Downloads.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Ci.nsIPromptService);
 // Context menu integration
 var menuItem = contextMenu.Item({
     label: "Save image with tags",
@@ -25,6 +24,7 @@ var menuItem = contextMenu.Item({
 
 function openSaveImageDialog(imageUri) {
     console.log(imageUri);
+    console.log("taglist: " + getTagList().toString());
     dlg = window.open("chrome://pictag/content/saveImage.xul",
 		      "pictag-save-image",
 		      "chrome,centerscreen");
@@ -32,6 +32,9 @@ function openSaveImageDialog(imageUri) {
     dlg.saveImageWithTags = function(tags) {
 	saveImageWithTags(imageUri, tags)
     }
+
+    dlg.getTagList = getTagList;
+    dlg.addTagToPrefs = addTagToPrefs;
 }
 
 hashCode = function(s){
@@ -88,14 +91,32 @@ function tagFilePath(tag, filename) {
     }, Cu.reportError);
 }
 
+function getTagList() {
+    var prefs = Services.prefs.getBranch("extensions.@pictag.");
+    try {
+	var taglist_str = prefs.getComplexValue("taglist", Ci.nsISupportsString).data;
+	return taglist_str.split(":");
+    } catch (e) {
+	return [];
+    }
+}
+
+function addTagToPrefs(tag) {
+    var str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    var prefs = Services.prefs.getBranch("extensions.@pictag.");
+    var taglist = getTagList();
+    taglist.append(tag);
+    str.data = taglist.join(":");
+    prefs.setComplexValue("taglist", Ci.nsISupportsString, str);
+}
+
 function getDefaultStorageDir() {
     var default_storage = OS.Path.join(OS.Constants.Path.homeDir, "PicTag");
     return default_storage;
 }
 
 function getStorageDir() {
-    Cu.import("resource://gre/modules/Services.jsm");
-    var prefs = Services.prefs.getBranch("extensions.pictag.");
+    var prefs = Services.prefs.getBranch("extensions.@pictag.");
 
     try {
 	var storage = prefs.getComplexValue("storagedir", Ci.nsILocalFile);
