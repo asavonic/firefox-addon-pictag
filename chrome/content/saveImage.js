@@ -1,4 +1,8 @@
-//var window = require('sdk/window/utils');
+function getFilename() {
+    var elem = document.getElementById("filename");
+    return elem.value + elem.cutoffPart;
+}
+
 // find checked tags and return them to window.out
 function returnTags() {
     console.log("returnTags()");
@@ -13,15 +17,24 @@ function returnTags() {
 	}
     }
 
-    saveImageWithTags(selected_tags);
+    saveImageWithTags(selected_tags, getFilename());
 }
 
 function onLoad () {
     loadTags();
+    loadFilename(defaultFilename);
     window.sizeToContent();
     var xPos = (screen.width/2) - (outerWidth/2);
     var yPos = (screen.height/2) - (outerHeight/2);
     window.moveTo(xPos, yPos);
+}
+
+function loadFilename(filename) {
+    var item = document.getElementById("filename");
+    var dot = filename.indexOf(".");
+
+    item.value = filename.substring(0, dot);
+    item.cutoffPart = filename.substring(dot);
 }
 
 function createTagElem(num, label) {

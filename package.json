@@ -1,7 +1,7 @@
 {
   "title": "PicTag",
   "name": "pictag",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Add-on to save pictures with multiple tags",
   "main": "index.js",
   "author": "Andrew Savonichev <andrew.savonichev@gmail.com>",

@@ -17,6 +17,7 @@
     <!-- <Button id="btn-on-load" class="dialog" label="onLoad()" oncommand="onLoad();"/> -->
     <spacer flex="1"/>
   </hbox>
+  <textbox id="filename"/>
   <grid>
     <columns>
       <column flex="2" />

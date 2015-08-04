@@ -29,29 +29,35 @@ function openSaveImageDialog(imageUri) {
 		      "pictag-save-image",
 		      "chrome,centerscreen");
 
-    dlg.saveImageWithTags = function(tags) {
-	saveImageWithTags(imageUri, tags)
+    dlg.saveImageWithTags = function(tags, filename) {
+	saveImageWithTags(imageUri, tags, filename)
     }
 
     dlg.getTagList = getTagList;
     dlg.addTagToPrefs = addTagToPrefs;
+
+    dlg.defaultFilename = filenameFromURI(imageUri);
 }
 
 hashCode = function(s){
   return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
 }
 
+function addHashToFilename(filename, str) {
+    var dot = filename.indexOf('.');
+    new_filename = filename.substring(0, dot) + "-" + Math.abs(hashCode(str))
+	+ filename.substring(dot);
+    return new_filename;
+}
+
 function filenameFromURI(uri) {
     var filename = uri.substring(uri.lastIndexOf('/')+1);
-    var dot = filename.indexOf('.');
-    filename = filename.substring(0, dot) + "-" + Math.abs(hashCode(uri))
-	+ filename.substring(dot);
     return filename;
 }
 
-function saveImageWithTags(imageUri, tags) {
+function saveImageWithTags(imageUri, tags, filename) {
     var storage = getStorageDir();
-    var filename = filenameFromURI(imageUri);
+    filename = addHashToFilename(filename, imageUri);
 
     // find out the first tag to save and skip already processed tags
     var firstTag = tags.shift();
